@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="description" content="Bepul onlayn viktorina va test saytimizda bilimingizni sinang. Turli mavzularda qiziqarli savollar va testlar.">
+    <meta name="keywords" content="viktorina, test, onlayn test, bilim sinovi, quiz, savol javob, o'zbek viktorinasi, bepul test">
+    <meta name="author" content="Sizning ismingiz">
+    <meta property="og:title" content="Viktorina Sayt - Onlayn Test">
+    <meta property="og:description" content="Bilimingizni sinang! Qiziqarli viktorinalar va testlar.">
+    <meta property="og:image" content="https://yoursite.vercel.app/preview-image.jpg">
+    <meta property="og:url" content="https://yoursite.vercel.app">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Viktorina Sayt">
+    <meta name="twitter:description" content="Bepul onlayn testlar va viktorinalar">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Viktorina - Real Quiz Maker. Ozingiz test yarating va do'stlaringiz bilan o'zingizning bilimingizni sinab ko'ring.">
+    <meta name="keywords" content="quiz, test, viktorina, o'quv, bilim, online test">
+    <meta name="author" content="IMIUZ_kahoot_team">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="Viktorina - Real Quiz Maker">
+    <meta property="og:description" content="Interaktiv testlar yarating va o'ynang">
+    <meta property="og:type" content="website">
+    <title>Viktorina - Real Quiz Maker</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="logo-brand" onclick="goToHome()" style="cursor: pointer;">
+                <i class="fas fa-brain"></i> Viktorina
+            </div>
+            <div class="nav-links" id="navLinks" style="display: none;">
+                <a href="#" onclick="goToHome()" class="nav-link">Home</a>
+                <a href="#" onclick="goToMyQuizzes()" class="nav-link">My Quizzes</a>
+                <a href="#" onclick="goToCreateQuiz()" class="nav-link">Create Quiz</a>
+                <a href="#" onclick="goToCodeEntry()" class="nav-link">Enter Code</a>
+                <a href="#" onclick="goToLeaderboard()" class="nav-link">Leaderboard</a>
+                <div class="nav-user">
+                    <span class="user-name" id="userName">User</span>
+                    <button class="btn-logout" onclick="logout()" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <!-- LOGIN SCREEN -->
+        <div class="screen" id="loginScreen">
+            <div class="auth-container">
+                <div class="auth-card">
+                    <div class="auth-logo">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h2>Welcome to Viktorina</h2>
+                    <p>Test your knowledge with interactive quizzes</p>
+
+                    <div class="auth-tabs">
+                        <button class="auth-tab-btn active" onclick="showLoginTab()">Sign In</button>
+                        <button class="auth-tab-btn" onclick="showRegisterTab()">Sign Up</button>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form id="loginForm" class="auth-form">
+                        <div class="form-group">
+                            <label>Email or Username</label>
+                            <input type="text" id="loginUsername" placeholder="Enter your email or username" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-lg" onclick="handleLogin()">
+                            <i class="fas fa-sign-in-alt"></i> Sign In
+                        </button>
+                    </form>
+
+                    <!-- Register Form -->
+                    <form id="registerForm" class="auth-form" style="display: none;">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="registerName" placeholder="Enter your full name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="registerEmail" placeholder="Enter your email" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="registerUsername" placeholder="Choose a username" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="registerPassword" placeholder="Create a password" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm Password</label>
+                            <input type="password" id="registerConfirmPassword" placeholder="Confirm your password" required>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-lg" onclick="handleRegister()">
+                            <i class="fas fa-user-plus"></i> Sign Up
+                        </button>
+                    </form>
+
+                    <div class="auth-error" id="authError"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HOME SCREEN -->
+        <div class="screen" id="homeScreen" style="display: none;">
+            <section class="hero">
+                <h1>Challenge Your Knowledge</h1>
+                <p>Create custom quizzes and challenge your friends</p>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary btn-lg" onclick="goToMyQuizzes()">
+                        <i class="fas fa-play"></i> Take Quiz
+                    </button>
+                    <button class="btn btn-secondary btn-lg" onclick="goToCreateQuiz()">
+                        <i class="fas fa-plus"></i> Create Quiz
+                    </button>
+                    <button class="btn btn-secondary btn-lg" onclick="goToCodeEntry()">
+                        <i class="fas fa-key"></i> Enter Code
+                    </button>
+                </div>
+            </section>
+
+            <section class="stats">
+                <div class="stat-box">
+                    <span class="stat-number" id="totalQuizzes">0</span>
+                    <span class="stat-label">Quizzes Created</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-number" id="totalTaken">0</span>
+                    <span class="stat-label">Quizzes Taken</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-number" id="bestScore">0%</span>
+                    <span class="stat-label">Best Score</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-number" id="avgScore">0%</span>
+                    <span class="stat-label">Avg Score</span>
+                </div>
+            </section>
+        </div>
+
+        <!-- MY QUIZZES SCREEN -->
+        <div class="screen" id="myQuizzesScreen" style="display: none;">
+            <div class="page-header">
+                <h2>My Quizzes</h2>
+                <button class="btn btn-primary" onclick="goToCreateQuiz()">
+                    <i class="fas fa-plus"></i> New Quiz
+                </button>
+            </div>
+
+            <div class="filter-tabs">
+                <button class="tab-btn active" onclick="filterQuizzes('all')">All</button>
+                <button class="tab-btn" onclick="filterQuizzes('own')">My Created</button>
+                <button class="tab-btn" onclick="filterQuizzes('played')">Played</button>
+            </div>
+
+            <div class="quizzes-list" id="quizzesList">
+                <p class="empty-message">No quizzes available. <a onclick="goToCreateQuiz()" style="cursor: pointer; color: #6366F1;">Create one now!</a></p>
+            </div>
+        </div>
+
+        <!-- CREATE QUIZ SCREEN -->
+        <div class="screen" id="createQuizScreen" style="display: none;">
+            <div class="create-header">
+                <h2>Create New Quiz</h2>
+                <button class="btn-close" onclick="goToHome()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form class="quiz-form">
+                <div class="form-section">
+                    <h3>Quiz Details</h3>
+                    
+                    <div class="form-group">
+                        <label>Quiz Title *</label>
+                        <input type="text" id="quizTitle" placeholder="e.g., Biology 101" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="quizCategory">
+                                <option>Science</option>
+                                <option>History</option>
+                                <option>Geography</option>
+                                <option>Technology</option>
+                                <option>Sports</option>
+                                <option>Entertainment</option>
+                                <option>Language</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Difficulty</label>
+                            <select id="quizDifficulty">
+                                <option>Easy</option>
+                                <option>Medium</option>
+                                <option>Hard</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="quizDescription" placeholder="Describe your quiz..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-header">
+                        <h3>Questions</h3>
+                        <span class="question-count" id="questionCount">0 Questions</span>
+                    </div>
+                    
+                    <div class="questions-list" id="questionsList"></div>
+
+                    <button type="button" class="btn btn-outline" onclick="addQuestion()">
+                        <i class="fas fa-plus"></i> Add Question
+                    </button>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="goToHome()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveQuiz()">
+                        <i class="fas fa-save"></i> Save Quiz
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- QUIZ SCREEN -->
+        <div class="screen" id="quizScreen" style="display: none;">
+            <div class="quiz-header">
+                <div class="quiz-info">
+                    <h2 id="quizDisplayTitle"></h2>
+                    <span id="quizMeta"></span>
+                </div>
+                <button class="btn-close" onclick="exitQuiz()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-info">
+                    <span id="questionProgress">1/10</span>
+                    <span id="timer">00:00</span>
+                </div>
+            </div>
+
+            <div class="quiz-content">
+                <div class="question-display">
+                    <h3 id="questionText"></h3>
+                    <div class="answers-grid" id="answersGrid"></div>
+                </div>
+
+                <div class="quiz-nav">
+                    <button class="btn btn-outline" id="prevBtn" onclick="previousQuestion()">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTS SCREEN -->
+        <div class="screen" id="resultsScreen" style="display: none;">
+            <div class="results-container">
+                <div class="results-header">
+                    <h2>Quiz Complete!</h2>
+                    <div class="score-badge" id="scoreBadge"></div>
+                </div>
+
+                <div class="results-stats">
+                    <div class="result-stat">
+                        <span class="label">Your Score</span>
+                        <span class="value" id="scoreValue">0/0</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="label">Accuracy</span>
+                        <span class="value" id="accuracyValue">0%</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="label">Time Taken</span>
+                        <span class="value" id="timeValue">00:00</span>
+                    </div>
+                </div>
+
+                <div class="results-answers">
+                    <h3>Review Your Answers</h3>
+                    <div class="review-list" id="reviewList"></div>
+                </div>
+
+                <div class="results-actions">
+                    <button class="btn btn-outline" onclick="goToHome()">
+                        <i class="fas fa-home"></i> Home
+                    </button>
+                    <button class="btn btn-secondary" onclick="shareResults()">
+                        <i class="fas fa-share"></i> Share Results
+                    </button>
+                    <button class="btn btn-primary" onclick="retakeQuiz()">
+                        <i class="fas fa-redo"></i> Retake Quiz
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- LEADERBOARD SCREEN -->
+        <div class="screen" id="leaderboardScreen" style="display: none;">
+            <div class="page-header">
+                <h2>Leaderboard</h2>
+            </div>
+
+            <div class="leaderboard-container">
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Quiz</th>
+                            <th>Player</th>
+                            <th>Score</th>
+                            <th>Accuracy</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 2rem;">No scores yet</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- CODE ENTRY SCREEN -->
+        <div class="screen" id="codeEntryScreen" style="display: none;">
+            <div class="card-center">
+                <h2>Enter Quiz Code</h2>
+                <p>Ask your friend for their quiz code and enter it here</p>
+                <input type="text" id="quizCode" class="code-input" placeholder="Enter 6-digit code" maxlength="6" style="text-transform: uppercase;">
+                <div id="codeError" class="error-message"></div>
+                <div class="button-group">
+                    <button class="btn btn-outline" onclick="goToHome()">Back</button>
+                    <button class="btn btn-primary" onclick="validateCode()">Enter Quiz</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Quiz Application with User Authentication
+
+        class AuthManager {
+            constructor() {
+                this.currentUser = this.loadCurrentUser();
+                this.users = this.loadUsers();
+            }
+
+            loadUsers() {
+                try {
+                    return JSON.parse(localStorage.getItem('users')) || {};
+                } catch {
+                    return {};
+                }
+            }
+
+            saveUsers() {
+                localStorage.setItem('users', JSON.stringify(this.users));
+            }
+
+            loadCurrentUser() {
+                try {
+                    return JSON.parse(localStorage.getItem('currentUser'));
+                } catch {
+                    return null;
+                }
+            }
+
+            saveCurrentUser() {
+                if (this.currentUser) {
+                    localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+                }
+            }
+
+            register(fullName, email, username, password) {
+                if (this.users[username]) {
+                    return { success: false, message: 'Username already exists' };
+                }
+
+                if (Object.values(this.users).some(u => u.email === email)) {
+                    return { success: false, message: 'Email already registered' };
+                }
+
+                this.users[username] = {
+                    username,
+                    fullName,
+                    email,
+                    password,
+                    createdAt: new Date().toISOString()
+                };
+
+                this.saveUsers();
+                return { success: true, message: 'Account created successfully!' };
+            }
+
+            login(usernameOrEmail, password) {
+                const user = Object.values(this.users).find(u => 
+                    (u.username === usernameOrEmail || u.email === usernameOrEmail) && u.password === password
+                );
+
+                if (!user) {
+                    return { success: false, message: 'Invalid username/email or password' };
+                }
+
+                this.currentUser = user;
+                this.saveCurrentUser();
+                return { success: true, message: 'Login successful!' };
+            }
+
+            logout() {
+                this.currentUser = null;
+                localStorage.removeItem('currentUser');
+            }
+
+            isLoggedIn() {
+                return this.currentUser !== null;
+            }
+
+            getCurrentUser() {
+                return this.currentUser;
+            }
+        }
+
+        class QuizApp {
+            constructor() {
+                this.auth = new AuthManager();
+                this.quizzes = this.loadFromStorage('quizzes') || {};
+                this.results = this.loadFromStorage('results') || [];
+                this.currentQuiz = null;
+                this.currentAnswers = [];
+                this.quizStartTime = null;
+                this.timerInterval = null;
+                this.editingQuizId = null;
+                this.currentQuestionIndex = 0;
+                this.initializeApp();
+            }
+
+            initializeApp() {
+                if (this.auth.isLoggedIn()) {
+                    document.getElementById('navLinks').style.display = 'flex';
+                    document.getElementById('userName').textContent = this.auth.getCurrentUser().fullName;
+                    this.showScreen('homeScreen');
+                } else {
+                    this.showScreen('loginScreen');
+                }
+            }
+
+            generateQuizCode() {
+                return Math.random().toString(36).substring(2, 8).toUpperCase().padEnd(6, '0').substring(0, 6);
+            }
+
+            loadFromStorage(key) {
+                try {
+                    return JSON.parse(localStorage.getItem(key));
+                } catch {
+                    return null;
+                }
+            }
+
+            saveToStorage(key, data) {
+                localStorage.setItem(key, JSON.stringify(data));
+            }
+
+            showScreen(screenId) {
+                document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+                document.getElementById(screenId).style.display = 'block';
+                
+                if (screenId === 'homeScreen') {
+                    this.updateHomeStats();
+                } else if (screenId === 'myQuizzesScreen') {
+                    this.loadMyQuizzes();
+                } else if (screenId === 'leaderboardScreen') {
+                    this.loadLeaderboard();
+                } else if (screenId === 'codeEntryScreen') {
+                    document.getElementById('codeError').classList.remove('show');
+                    document.getElementById('quizCode').value = '';
+                }
+            }
+
+            updateHomeStats() {
+                const createdCount = Object.keys(this.quizzes).length;
+                const takenCount = this.results.length;
+                const scores = this.results.map(r => r.accuracy);
+                const bestScore = scores.length > 0 ? Math.max(...scores) : 0;
+                const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b) / scores.length) : 0;
+
+                document.getElementById('totalQuizzes').textContent = createdCount;
+                document.getElementById('totalTaken').textContent = takenCount;
+                document.getElementById('bestScore').textContent = bestScore + '%';
+                document.getElementById('avgScore').textContent = avgScore + '%';
+            }
+
+            loadMyQuizzes(filter = 'all') {
+                const list = document.getElementById('quizzesList');
+                list.innerHTML = '';
+
+                let quizzesToShow = Object.entries(this.quizzes);
+
+                if (filter === 'own') {
+                    quizzesToShow = quizzesToShow.filter(([_, q]) => q.createdBy === this.auth.getCurrentUser().username);
+                } else if (filter === 'played') {
+                    const playedIds = this.results.map(r => r.quizId);
+                    quizzesToShow = quizzesToShow.filter(([id]) => playedIds.includes(id));
+                }
+
+                if (quizzesToShow.length === 0) {
+                    list.innerHTML = '<p class="empty-message">No quizzes found. <a onclick="goToCreateQuiz()" style="cursor: pointer; color: #6366F1;">Create one!</a></p>';
+                    return;
+                }
+
+                quizzesToShow.forEach(([id, quiz]) => {
+                    const card = this.createQuizCard(id, quiz);
+                    list.appendChild(card);
+                });
+            }
+
+            createQuizCard(id, quiz) {
+                const card = document.createElement('div');
+                card.className = 'quiz-card';
+
+                const stats = this.results.filter(r => r.quizId === id);
+                const timesPlayed = stats.length;
+                const avgScore = stats.length > 0 ? Math.round(stats.reduce((a, b) => a + b.accuracy, 0) / stats.length) : 0;
+                const isOwnQuiz = quiz.createdBy === this.auth.getCurrentUser().username;
+
+                card.innerHTML = `
+                    <div class="card-header">
+                        <h3>${quiz.title}</h3>
+                        <span class="difficulty-badge ${quiz.difficulty.toLowerCase()}">${quiz.difficulty}</span>
+                    </div>
+                    <p class="card-description">${quiz.description}</p>
+                    <div class="card-meta">
+                        <span><i class="fas fa-question-circle"></i> ${quiz.questions.length} Questions</span>
+                        <span><i class="fas fa-play"></i> ${timesPlayed} Played</span>
+                        <span><i class="fas fa-chart-pie"></i> ${avgScore}% Avg</span>
+                    </div>
+                    ${isOwnQuiz ? `
+                        <div class="quiz-code-section">
+                            <p class="code-label">Share Code:</p>
+                            <div class="code-display">
+                                <span class="code-value">${quiz.quizCode}</span>
+                                <button class="btn-copy" onclick="app.copyCode('${quiz.quizCode}')" title="Copy code">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="quiz-creator">
+                            <span><i class="fas fa-user"></i> by ${quiz.createdBy}</span>
+                        </div>
+                    `}
+                    <div class="card-actions">
+                        <button class="btn btn-sm btn-primary" onclick="app.startQuiz('${id}')">
+                            <i class="fas fa-play"></i> Play
+                        </button>
+                        ${isOwnQuiz ? `
+                            <button class="btn btn-sm btn-outline" onclick="app.editQuiz('${id}')">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="app.deleteQuiz('${id}')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+
+                return card;
+            }
+
+            copyCode(code) {
+                navigator.clipboard.writeText(code);
+                alert('Code copied: ' + code);
+            }
+
+            filterQuizzes(type) {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                event.target.classList.add('active');
+                this.loadMyQuizzes(type);
+            }
+
+            goToCreateQuiz() {
+                this.editingQuizId = null;
+                this.clearQuizForm();
+                this.showScreen('createQuizScreen');
+                this.addQuestion();
+            }
+
+            editQuiz(id) {
+                this.editingQuizId = id;
+                const quiz = this.quizzes[id];
+                
+                document.getElementById('quizTitle').value = quiz.title;
+                document.getElementById('quizCategory').value = quiz.category;
+                document.getElementById('quizDifficulty').value = quiz.difficulty;
+                document.getElementById('quizDescription').value = quiz.description;
+                
+                document.getElementById('questionsList').innerHTML = '';
+                quiz.questions.forEach((q, i) => this.addQuestion(q));
+                
+                this.showScreen('createQuizScreen');
+            }
+
+            addQuestion(questionData = null) {
+                const list = document.getElementById('questionsList');
+                const index = list.children.length;
+                
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-card';
+                
+                const defaultQuestion = questionData || {
+                    question: '',
+                    answers: ['', '', '', ''],
+                    correct: 0
+                };
+
+                questionDiv.innerHTML = `
+                    <div class="question-header">
+                        <span>Question ${index + 1}</span>
+                        <button type="button" class="btn-remove" onclick="app.removeQuestion(this)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Question Text</label>
+                        <textarea class="question-input" placeholder="Enter your question">${defaultQuestion.question}</textarea>
+                    </div>
+
+                    <div class="answers-section">
+                        ${defaultQuestion.answers.map((answer, i) => `
+                            <div class="answer-row">
+                                <input type="radio" name="correct_${index}" value="${i}" 
+                                    ${defaultQuestion.correct === i ? 'checked' : ''}>
+                                <input type="text" class="answer-input" placeholder="Answer ${i + 1}" value="${answer}">
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                list.appendChild(questionDiv);
+                this.updateQuestionCount();
+            }
+
+            removeQuestion(btn) {
+                btn.closest('.question-card').remove();
+                this.updateQuestionCount();
+            }
+
+            updateQuestionCount() {
+                const count = document.querySelectorAll('.question-card').length;
+                document.getElementById('questionCount').textContent = count + ' Questions';
+            }
+
+            clearQuizForm() {
+                document.getElementById('quizTitle').value = '';
+                document.getElementById('quizCategory').value = 'Science';
+                document.getElementById('quizDifficulty').value = 'Medium';
+                document.getElementById('quizDescription').value = '';
+                document.getElementById('questionsList').innerHTML = '';
+            }
+
+            saveQuiz() {
+                const title = document.getElementById('quizTitle').value.trim();
+                const category = document.getElementById('quizCategory').value;
+                const difficulty = document.getElementById('quizDifficulty').value;
+                const description = document.getElementById('quizDescription').value.trim();
+
+                if (!title) {
+                    alert('Please enter a quiz title');
+                    return;
+                }
+
+                const questions = [];
+                document.querySelectorAll('.question-card').forEach((card, index) => {
+                    const questionText = card.querySelector('.question-input').value.trim();
+                    const answers = Array.from(card.querySelectorAll('.answer-input')).map(i => i.value.trim());
+                    const correct = parseInt(card.querySelector(`input[name="correct_${index}"]:checked`).value);
+
+                    if (questionText && answers.every(a => a)) {
+                        questions.push({ question: questionText, answers, correct });
+                    }
+                });
+
+                if (questions.length === 0) {
+                    alert('Please add at least one complete question');
+                    return;
+                }
+
+                const quizId = this.editingQuizId || 'quiz_' + Date.now();
+                const quizCode = this.quizzes[quizId]?.quizCode || this.generateQuizCode();
+
+                this.quizzes[quizId] = {
+                    title,
+                    category,
+                    difficulty,
+                    description,
+                    questions,
+                    quizCode,
+                    createdBy: this.auth.getCurrentUser().username,
+                    createdAt: new Date().toISOString()
+                };
+
+                this.saveToStorage('quizzes', this.quizzes);
+                alert(`Quiz saved! Share code: ${quizCode}`);
+                this.showScreen('myQuizzesScreen');
+            }
+
+            deleteQuiz(id) {
+                if (confirm('Are you sure you want to delete this quiz?')) {
+                    delete this.quizzes[id];
+                    this.saveToStorage('quizzes', this.quizzes);
+                    this.loadMyQuizzes();
+                }
+            }
+
+            startQuiz(quizId) {
+                this.currentQuiz = { id: quizId, ...this.quizzes[quizId] };
+                this.currentAnswers = new Array(this.currentQuiz.questions.length).fill(null);
+                this.quizStartTime = Date.now();
+                this.currentQuestionIndex = 0;
+
+                document.getElementById('quizDisplayTitle').textContent = this.currentQuiz.title;
+                document.getElementById('quizMeta').textContent = `${this.currentQuiz.category} • ${this.currentQuiz.difficulty}`;
+
+                this.showScreen('quizScreen');
+                this.loadQuestion();
+                this.startTimer();
+            }
+
+            loadQuestion() {
+                const q = this.currentQuiz.questions[this.currentQuestionIndex];
+                const progress = ((this.currentQuestionIndex) / this.currentQuiz.questions.length) * 100;
+
+                document.getElementById('progressFill').style.width = progress + '%';
+                document.getElementById('questionProgress').textContent = 
+                    `${this.currentQuestionIndex + 1}/${this.currentQuiz.questions.length}`;
+                document.getElementById('questionText').textContent = q.question;
+
+                const grid = document.getElementById('answersGrid');
+                grid.innerHTML = '';
+
+                q.answers.forEach((answer, i) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'answer-btn';
+                    btn.textContent = answer;
+                    btn.onclick = () => this.selectAnswer(i);
+                    
+                    if (this.currentAnswers[this.currentQuestionIndex] === i) {
+                        btn.classList.add('selected');
+                    }
+
+                    grid.appendChild(btn);
+                });
+
+                document.getElementById('prevBtn').disabled = this.currentQuestionIndex === 0;
+                document.getElementById('nextBtn').textContent = 
+                    this.currentQuestionIndex === this.currentQuiz.questions.length - 1 
+                        ? 'Submit' 
+                        : 'Next';
+            }
+
+            selectAnswer(index) {
+                this.currentAnswers[this.currentQuestionIndex] = index;
+                document.querySelectorAll('.answer-btn').forEach((btn, i) => {
+                    btn.classList.toggle('selected', i === index);
+                });
+            }
+
+            nextQuestion() {
+                if (this.currentAnswers[this.currentQuestionIndex] === null) {
+                    alert('Please select an answer');
+                    return;
+                }
+
+                if (this.currentQuestionIndex === this.currentQuiz.questions.length - 1) {
+                    this.submitQuiz();
+                } else {
+                    this.currentQuestionIndex++;
+                    this.loadQuestion();
+                }
+            }
+
+            previousQuestion() {
+                if (this.currentQuestionIndex > 0) {
+                    this.currentQuestionIndex--;
+                    this.loadQuestion();
+                }
+            }
+
+            submitQuiz() {
+                clearInterval(this.timerInterval);
+                
+                let score = 0;
+                this.currentQuiz.questions.forEach((q, i) => {
+                    if (this.currentAnswers[i] === q.correct) {
+                        score++;
+                    }
+                });
+
+                const accuracy = Math.round((score / this.currentQuiz.questions.length) * 100);
+                const timeTaken = Math.floor((Date.now() - this.quizStartTime) / 1000);
+
+                const result = {
+                    quizId: this.currentQuiz.id,
+                    quizTitle: this.currentQuiz.title,
+                    score,
+                    totalQuestions: this.currentQuiz.questions.length,
+                    accuracy,
+                    timeTaken,
+                    answers: this.currentAnswers,
+                    completedAt: new Date().toISOString()
+                };
+
+                this.results.push(result);
+                this.saveToStorage('results', this.results);
+
+                this.showResults(result);
+            }
+
+            showResults(result) {
+                const minutes = Math.floor(result.timeTaken / 60);
+                const seconds = result.timeTaken % 60;
+
+                document.getElementById('scoreValue').textContent = `${result.score}/${result.totalQuestions}`;
+                document.getElementById('accuracyValue').textContent = result.accuracy + '%';
+                document.getElementById('timeValue').textContent = 
+                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+                let badge = '🔴';
+                if (result.accuracy >= 80) badge = '🟢 Excellent!';
+                else if (result.accuracy >= 60) badge = '🟡 Good!';
+                else if (result.accuracy >= 40) badge = '🟠 OK';
+                else badge = '🔴 Try Again';
+
+                document.getElementById('scoreBadge').textContent = badge;
+
+                const reviewList = document.getElementById('reviewList');
+                reviewList.innerHTML = '';
+
+                this.currentQuiz.questions.forEach((q, i) => {
+                    const isCorrect = result.answers[i] === q.correct;
+                    const div = document.createElement('div');
+                    div.className = `review-item ${isCorrect ? 'correct' : 'incorrect'}`;
+
+                    div.innerHTML = `
+                        <div class="review-question">
+                            <span class="review-icon">${isCorrect ? '✓' : '✗'}</span>
+                            <span>${q.question}</span>
+                        </div>
+                        <div class="review-answer">
+                            <p><strong>Your answer:</strong> ${q.answers[result.answers[i]]}</p>
+                            ${!isCorrect ? `<p><strong>Correct answer:</strong> ${q.answers[q.correct]}</p>` : ''}
+                        </div>
+                    `;
+
+                    reviewList.appendChild(div);
+                });
+
+                this.showScreen('resultsScreen');
+            }
+
+            retakeQuiz() {
+                this.startQuiz(this.currentQuiz.id);
+            }
+
+            exitQuiz() {
+                if (confirm('Exit quiz? Progress will be lost.')) {
+                    clearInterval(this.timerInterval);
+                    this.showScreen('homeScreen');
+                }
+            }
+
+            startTimer() {
+                this.timerInterval = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - this.quizStartTime) / 1000);
+                    const minutes = Math.floor(elapsed / 60);
+                    const seconds = elapsed % 60;
+                    document.getElementById('timer').textContent = 
+                        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                }, 1000);
+            }
+
+            loadLeaderboard() {
+                const tbody = document.getElementById('leaderboardBody');
+                
+                if (this.results.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">No scores yet</td></tr>';
+                    return;
+                }
+
+                const sorted = [...this.results]
+                    .sort((a, b) => b.accuracy - a.accuracy)
+                    .slice(0, 50);
+
+                tbody.innerHTML = sorted.map((r, i) => `
+                    <tr>
+                        <td><strong>#${i + 1}</strong></td>
+                        <td>${r.quizTitle}</td>
+                        <td>${this.auth.getCurrentUser().fullName}</td>
+                        <td>${r.score}/${r.totalQuestions}</td>
+                        <td>${r.accuracy}%</td>
+                        <td>${Math.floor(r.timeTaken / 60)}:${String(r.timeTaken % 60).padStart(2, '0')}</td>
+                    </tr>
+                `).join('');
+            }
+
+            shareResults() {
+                alert('Share functionality: Copy result link or social media share');
+            }
+
+            validateCode() {
+                const code = document.getElementById('quizCode').value.trim().toUpperCase();
+                const errorEl = document.getElementById('codeError');
+                
+                if (!code || code.length !== 6) {
+                    errorEl.textContent = 'Please enter a valid 6-digit code';
+                    errorEl.classList.add('show');
+                    return;
+                }
+
+                const quizId = Object.keys(this.quizzes).find(id => this.quizzes[id].quizCode === code);
+                
+                if (quizId) {
+                    errorEl.classList.remove('show');
+                    this.startQuiz(quizId);
+                } else {
+                    errorEl.textContent = 'Invalid quiz code. Please check and try again.';
+                    errorEl.classList.add('show');
+                }
+            }
+        }
+
+        // Initialize App
+        const app = new QuizApp();
+
+        // Authentication Functions
+        function showLoginTab() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.querySelectorAll('.auth-tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('authError').textContent = '';
+        }
+
+        function showRegisterTab() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.querySelectorAll('.auth-tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('authError').textContent = '';
+        }
+
+        function handleLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const errorEl = document.getElementById('authError');
+
+            if (!username || !password) {
+                errorEl.textContent = 'Please fill in all fields';
+                return;
+            }
+
+            const result = app.auth.login(username, password);
+            if (result.success) {
+                app.initializeApp();
+            } else {
+                errorEl.textContent = result.message;
+            }
+        }
+
+        function handleRegister() {
+            const fullName = document.getElementById('registerName').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const username = document.getElementById('registerUsername').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            const errorEl = document.getElementById('authError');
+
+            if (!fullName || !email || !username || !password || !confirmPassword) {
+                errorEl.textContent = 'Please fill in all fields';
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                errorEl.textContent = 'Passwords do not match';
+                return;
+            }
+
+            if (password.length < 6) {
+                errorEl.textContent = 'Password must be at least 6 characters';
+                return;
+            }
+
+            const result = app.auth.register(fullName, email, username, password);
+            if (result.success) {
+                errorEl.textContent = '';
+                alert('Account created! Please login.');
+                showLoginTab();
+                document.getElementById('loginUsername').value = username;
+            } else {
+                errorEl.textContent = result.message;
+            }
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                app.auth.logout();
+                document.getElementById('navLinks').style.display = 'none';
+                app.showScreen('loginScreen');
+            }
+        }
+
+        // Global functions
+        function goToHome() { app.showScreen('homeScreen'); }
+        function goToMyQuizzes() { app.showScreen('myQuizzesScreen'); app.loadMyQuizzes(); }
+        function goToCreateQuiz() { app.goToCreateQuiz(); }
+        function goToLeaderboard() { app.showScreen('leaderboardScreen'); }
+        function goToCodeEntry() { app.showScreen('codeEntryScreen'); }
+        function addQuestion(data) { app.addQuestion(data); }
+        function removeQuestion(btn) { app.removeQuestion(btn); }
+        function saveQuiz() { app.saveQuiz(); }
+        function deleteQuiz(id) { app.deleteQuiz(id); }
+        function startQuiz(id) { app.startQuiz(id); }
+        function editQuiz(id) { app.editQuiz(id); }
+        function filterQuizzes(type) { app.filterQuizzes(type); }
+        function nextQuestion() { app.nextQuestion(); }
+        function previousQuestion() { app.previousQuestion(); }
+        function exitQuiz() { app.exitQuiz(); }
+        function retakeQuiz() { app.retakeQuiz(); }
+        function shareResults() { app.shareResults(); }
+        function validateCode() { app.validateCode(); }
+    </script>
+</body>
+</html>
