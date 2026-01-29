@@ -26,6 +26,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -404,79 +408,91 @@
         </div>
     </div>
 
-    <script>
-        // Quiz Application with User Authentication
+        <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDOA9mA-e4dxvWdZkRmcmKidTssTs2LajA",
+            authDomain: "viktorina-2da45.firebaseapp.com",
+            projectId: "viktorina-2da45",
+            storageBucket: "viktorina-2da45.firebasestorage.app",
+            messagingSenderId: "943364272362",
+            appId: "1:943364272362:web:e6aa7ebc6859d413fbe793"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
 
         class AuthManager {
             constructor() {
-                this.currentUser = this.loadCurrentUser();
-                this.users = this.loadUsers();
+                this.currentUser = null;
+                this.unsubscribe = null;
+                this.setupAuthListener();
             }
 
-            loadUsers() {
+            setupAuthListener() {
+                this.unsubscribe = auth.onAuthStateChanged(async (user) => {
+                    if (user) {
+                        this.currentUser = {
+                            uid: user.uid,
+                            email: user.email,
+                            fullName: user.displayName || 'User'
+                        };
+                        await app.loadUserData();
+                        app.initializeApp();
+                    } else {
+                        this.currentUser = null;
+                    }
+                });
+            }
+
+            async register(fullName, email, username, password) {
                 try {
-                    return JSON.parse(localStorage.getItem('users')) || {};
-                } catch {
-                    return {};
+                    const userSnapshot = await db.collection('users').where('username', '==', username).get();
+                    if (!userSnapshot.empty) {
+                        return { success: false, message: 'Username already exists' };
+                    }
+
+                    const result = await auth.createUserWithEmailAndPassword(email, password);
+                    const user = result.user;
+
+                    await user.updateProfile({ displayName: fullName });
+
+                    await db.collection('users').doc(user.uid).set({
+                        username,
+                        fullName,
+                        email,
+                        createdAt: new Date().toISOString()
+                    });
+
+                    return { success: true, message: 'Account created successfully!' };
+                } catch (error) {
+                    return { success: false, message: error.message };
                 }
             }
 
-            saveUsers() {
-                localStorage.setItem('users', JSON.stringify(this.users));
-            }
-
-            loadCurrentUser() {
+            async login(usernameOrEmail, password) {
                 try {
-                    return JSON.parse(localStorage.getItem('currentUser'));
-                } catch {
-                    return null;
-                }
-            }
+                    let email = usernameOrEmail;
 
-            saveCurrentUser() {
-                if (this.currentUser) {
-                    localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
-                }
-            }
+                    // Check if input is username
+                    if (!usernameOrEmail.includes('@')) {
+                        const userSnapshot = await db.collection('users').where('username', '==', usernameOrEmail).get();
+                        if (userSnapshot.empty) {
+                            return { success: false, message: 'Invalid username/email or password' };
+                        }
+                        email = userSnapshot.docs[0].data().email;
+                    }
 
-            register(fullName, email, username, password) {
-                if (this.users[username]) {
-                    return { success: false, message: 'Username already exists' };
-                }
-
-                if (Object.values(this.users).some(u => u.email === email)) {
-                    return { success: false, message: 'Email already registered' };
-                }
-
-                this.users[username] = {
-                    username,
-                    fullName,
-                    email,
-                    password,
-                    createdAt: new Date().toISOString()
-                };
-
-                this.saveUsers();
-                return { success: true, message: 'Account created successfully!' };
-            }
-
-            login(usernameOrEmail, password) {
-                const user = Object.values(this.users).find(u => 
-                    (u.username === usernameOrEmail || u.email === usernameOrEmail) && u.password === password
-                );
-
-                if (!user) {
+                    await auth.signInWithEmailAndPassword(email, password);
+                    return { success: true, message: 'Login successful!' };
+                } catch (error) {
                     return { success: false, message: 'Invalid username/email or password' };
                 }
-
-                this.currentUser = user;
-                this.saveCurrentUser();
-                return { success: true, message: 'Login successful!' };
             }
 
             logout() {
-                this.currentUser = null;
-                localStorage.removeItem('currentUser');
+                auth.signOut();
             }
 
             isLoggedIn() {
@@ -491,15 +507,38 @@
         class QuizApp {
             constructor() {
                 this.auth = new AuthManager();
-                this.quizzes = this.loadFromStorage('quizzes') || {};
-                this.results = this.loadFromStorage('results') || [];
+                this.quizzes = {};
+                this.results = [];
                 this.currentQuiz = null;
                 this.currentAnswers = [];
                 this.quizStartTime = null;
                 this.timerInterval = null;
                 this.editingQuizId = null;
                 this.currentQuestionIndex = 0;
-                this.initializeApp();
+            }
+
+            async loadUserData() {
+                if (!this.auth.isLoggedIn()) return;
+
+                try {
+                    const userId = this.auth.currentUser.uid;
+
+                    // Load quizzes
+                    const quizzesSnapshot = await db.collection('users').doc(userId).collection('quizzes').get();
+                    this.quizzes = {};
+                    quizzesSnapshot.forEach(doc => {
+                        this.quizzes[doc.id] = { ...doc.data(), id: doc.id };
+                    });
+
+                    // Load results
+                    const resultsSnapshot = await db.collection('users').doc(userId).collection('results').get();
+                    this.results = [];
+                    resultsSnapshot.forEach(doc => {
+                        this.results.push({ ...doc.data(), id: doc.id });
+                    });
+                } catch (error) {
+                    console.error('Error loading user data:', error);
+                }
             }
 
             initializeApp() {
@@ -516,22 +555,10 @@
                 return Math.random().toString(36).substring(2, 8).toUpperCase().padEnd(6, '0').substring(0, 6);
             }
 
-            loadFromStorage(key) {
-                try {
-                    return JSON.parse(localStorage.getItem(key));
-                } catch {
-                    return null;
-                }
-            }
-
-            saveToStorage(key, data) {
-                localStorage.setItem(key, JSON.stringify(data));
-            }
-
             showScreen(screenId) {
                 document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
                 document.getElementById(screenId).style.display = 'block';
-                
+
                 if (screenId === 'homeScreen') {
                     this.updateHomeStats();
                 } else if (screenId === 'myQuizzesScreen') {
@@ -564,7 +591,7 @@
                 let quizzesToShow = Object.entries(this.quizzes);
 
                 if (filter === 'own') {
-                    quizzesToShow = quizzesToShow.filter(([_, q]) => q.createdBy === this.auth.getCurrentUser().username);
+                    quizzesToShow = quizzesToShow.filter(([_, q]) => q.createdBy === this.auth.getCurrentUser().email);
                 } else if (filter === 'played') {
                     const playedIds = this.results.map(r => r.quizId);
                     quizzesToShow = quizzesToShow.filter(([id]) => playedIds.includes(id));
@@ -588,7 +615,7 @@
                 const stats = this.results.filter(r => r.quizId === id);
                 const timesPlayed = stats.length;
                 const avgScore = stats.length > 0 ? Math.round(stats.reduce((a, b) => a + b.accuracy, 0) / stats.length) : 0;
-                const isOwnQuiz = quiz.createdBy === this.auth.getCurrentUser().username;
+                const isOwnQuiz = quiz.createdBy === this.auth.getCurrentUser().email;
 
                 card.innerHTML = `
                     <div class="card-header">
@@ -655,25 +682,25 @@
             editQuiz(id) {
                 this.editingQuizId = id;
                 const quiz = this.quizzes[id];
-                
+
                 document.getElementById('quizTitle').value = quiz.title;
                 document.getElementById('quizCategory').value = quiz.category;
                 document.getElementById('quizDifficulty').value = quiz.difficulty;
                 document.getElementById('quizDescription').value = quiz.description;
-                
+
                 document.getElementById('questionsList').innerHTML = '';
                 quiz.questions.forEach((q, i) => this.addQuestion(q));
-                
+
                 this.showScreen('createQuizScreen');
             }
 
             addQuestion(questionData = null) {
                 const list = document.getElementById('questionsList');
                 const index = list.children.length;
-                
+
                 const questionDiv = document.createElement('div');
                 questionDiv.className = 'question-card';
-                
+
                 const defaultQuestion = questionData || {
                     question: '',
                     answers: ['', '', '', ''],
@@ -687,7 +714,7 @@
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Question Text</label>
                         <textarea class="question-input" placeholder="Enter your question">${defaultQuestion.question}</textarea>
@@ -696,7 +723,7 @@
                     <div class="answers-section">
                         ${defaultQuestion.answers.map((answer, i) => `
                             <div class="answer-row">
-                                <input type="radio" name="correct_${index}" value="${i}" 
+                                <input type="radio" name="correct_${index}" value="${i}"
                                     ${defaultQuestion.correct === i ? 'checked' : ''}>
                                 <input type="text" class="answer-input" placeholder="Answer ${i + 1}" value="${answer}">
                             </div>
@@ -726,7 +753,7 @@
                 document.getElementById('questionsList').innerHTML = '';
             }
 
-            saveQuiz() {
+            async saveQuiz() {
                 const title = document.getElementById('quizTitle').value.trim();
                 const category = document.getElementById('quizCategory').value;
                 const difficulty = document.getElementById('quizDifficulty').value;
@@ -756,27 +783,38 @@
                 const quizId = this.editingQuizId || 'quiz_' + Date.now();
                 const quizCode = this.quizzes[quizId]?.quizCode || this.generateQuizCode();
 
-                this.quizzes[quizId] = {
+                const quizData = {
                     title,
                     category,
                     difficulty,
                     description,
                     questions,
                     quizCode,
-                    createdBy: this.auth.getCurrentUser().username,
+                    createdBy: this.auth.getCurrentUser().email,
                     createdAt: new Date().toISOString()
                 };
 
-                this.saveToStorage('quizzes', this.quizzes);
-                alert(`Quiz saved! Share code: ${quizCode}`);
-                this.showScreen('myQuizzesScreen');
+                try {
+                    const userId = this.auth.currentUser.uid;
+                    await db.collection('users').doc(userId).collection('quizzes').doc(quizId).set(quizData);
+                    this.quizzes[quizId] = { ...quizData, id: quizId };
+                    alert(`Quiz saved! Share code: ${quizCode}`);
+                    this.showScreen('myQuizzesScreen');
+                } catch (error) {
+                    alert('Error saving quiz: ' + error.message);
+                }
             }
 
-            deleteQuiz(id) {
+            async deleteQuiz(id) {
                 if (confirm('Are you sure you want to delete this quiz?')) {
-                    delete this.quizzes[id];
-                    this.saveToStorage('quizzes', this.quizzes);
-                    this.loadMyQuizzes();
+                    try {
+                        const userId = this.auth.currentUser.uid;
+                        await db.collection('users').doc(userId).collection('quizzes').doc(id).delete();
+                        delete this.quizzes[id];
+                        this.loadMyQuizzes();
+                    } catch (error) {
+                        alert('Error deleting quiz: ' + error.message);
+                    }
                 }
             }
 
@@ -799,7 +837,7 @@
                 const progress = ((this.currentQuestionIndex) / this.currentQuiz.questions.length) * 100;
 
                 document.getElementById('progressFill').style.width = progress + '%';
-                document.getElementById('questionProgress').textContent = 
+                document.getElementById('questionProgress').textContent =
                     `${this.currentQuestionIndex + 1}/${this.currentQuiz.questions.length}`;
                 document.getElementById('questionText').textContent = q.question;
 
@@ -812,7 +850,7 @@
                     btn.className = 'answer-btn';
                     btn.textContent = answer;
                     btn.onclick = () => this.selectAnswer(i);
-                    
+
                     if (this.currentAnswers[this.currentQuestionIndex] === i) {
                         btn.classList.add('selected');
                     }
@@ -821,9 +859,9 @@
                 });
 
                 document.getElementById('prevBtn').disabled = this.currentQuestionIndex === 0;
-                document.getElementById('nextBtn').textContent = 
-                    this.currentQuestionIndex === this.currentQuiz.questions.length - 1 
-                        ? 'Submit' 
+                document.getElementById('nextBtn').textContent =
+                    this.currentQuestionIndex === this.currentQuiz.questions.length - 1
+                        ? 'Submit'
                         : 'Next';
             }
 
@@ -855,9 +893,9 @@
                 }
             }
 
-            submitQuiz() {
+            async submitQuiz() {
                 clearInterval(this.timerInterval);
-                
+
                 let score = 0;
                 this.currentQuiz.questions.forEach((q, i) => {
                     if (this.currentAnswers[i] === q.correct) {
@@ -879,8 +917,14 @@
                     completedAt: new Date().toISOString()
                 };
 
-                this.results.push(result);
-                this.saveToStorage('results', this.results);
+                try {
+                    const userId = this.auth.currentUser.uid;
+                    const resultId = 'result_' + Date.now();
+                    await db.collection('users').doc(userId).collection('results').doc(resultId).set(result);
+                    this.results.push({ ...result, id: resultId });
+                } catch (error) {
+                    console.error('Error saving result:', error);
+                }
 
                 this.showResults(result);
             }
@@ -891,7 +935,7 @@
 
                 document.getElementById('scoreValue').textContent = `${result.score}/${result.totalQuestions}`;
                 document.getElementById('accuracyValue').textContent = result.accuracy + '%';
-                document.getElementById('timeValue').textContent = 
+                document.getElementById('timeValue').textContent =
                     `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
                 let badge = '🔴';
@@ -943,14 +987,15 @@
                     const elapsed = Math.floor((Date.now() - this.quizStartTime) / 1000);
                     const minutes = Math.floor(elapsed / 60);
                     const seconds = elapsed % 60;
-                    document.getElementById('timer').textContent = 
+                    document.getElementById('timer').textContent =
                         `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
                 }, 1000);
             }
+
             validateCode() {
                 const code = document.getElementById('quizCode').value.trim().toUpperCase();
                 const errorEl = document.getElementById('codeError');
-                
+
                 if (!code || code.length !== 6) {
                     errorEl.textContent = 'Please enter a valid 6-digit code';
                     errorEl.classList.add('show');
@@ -958,7 +1003,7 @@
                 }
 
                 const quizId = Object.keys(this.quizzes).find(id => this.quizzes[id].quizCode === code);
-                
+
                 if (quizId) {
                     errorEl.classList.remove('show');
                     this.startQuiz(quizId);
@@ -967,9 +1012,10 @@
                     errorEl.classList.add('show');
                 }
             }
+
             loadLeaderboard() {
                 const tbody = document.getElementById('leaderboardBody');
-                
+
                 if (this.results.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">No scores yet</td></tr>';
                     return;
@@ -993,27 +1039,6 @@
 
             shareResults() {
                 alert('Share functionality: Copy result link or social media share');
-            }
-
-            validateCode() {
-                const code = document.getElementById('quizCode').value.trim().toUpperCase();
-                const errorEl = document.getElementById('codeError');
-                
-                if (!code || code.length !== 6) {
-                    errorEl.textContent = 'Please enter a valid 6-digit code';
-                    errorEl.classList.add('show');
-                    return;
-                }
-
-                const quizId = Object.keys(this.quizzes).find(id => this.quizzes[id].quizCode === code);
-                
-                if (quizId) {
-                    errorEl.classList.remove('show');
-                    this.startQuiz(quizId);
-                } else {
-                    errorEl.textContent = 'Invalid quiz code. Please check and try again.';
-                    errorEl.classList.add('show');
-                }
             }
         }
 
@@ -1047,12 +1072,11 @@
                 return;
             }
 
-            const result = app.auth.login(username, password);
-            if (result.success) {
-                app.initializeApp();
-            } else {
-                errorEl.textContent = result.message;
-            }
+            app.auth.login(username, password).then(result => {
+                if (!result.success) {
+                    errorEl.textContent = result.message;
+                }
+            });
         }
 
         function handleRegister() {
@@ -1078,22 +1102,22 @@
                 return;
             }
 
-            const result = app.auth.register(fullName, email, username, password);
-            if (result.success) {
-                errorEl.textContent = '';
-                alert('Account created! Please login.');
-                showLoginTab();
-                document.getElementById('loginUsername').value = username;
-            } else {
-                errorEl.textContent = result.message;
-            }
+            app.auth.register(fullName, email, username, password).then(result => {
+                if (result.success) {
+                    errorEl.textContent = '';
+                    alert('Account created! Please login.');
+                    showLoginTab();
+                    document.getElementById('loginUsername').value = username;
+                } else {
+                    errorEl.textContent = result.message;
+                }
+            });
         }
 
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
                 app.auth.logout();
                 document.getElementById('navLinks').style.display = 'none';
-                app.showScreen('loginScreen');
             }
         }
 
@@ -1116,59 +1140,40 @@
         function retakeQuiz() { app.retakeQuiz(); }
         function shareResults() { app.shareResults(); }
         function validateCode() { app.validateCode(); }
-function showForgotPasswordTab() {
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('registerForm').style.display = 'none';
-    document.getElementById('forgotPasswordScreen').style.display = 'block';
-    document.getElementById('resetError').textContent = '';
-    document.getElementById('resetMessage').textContent = '';
-    document.getElementById('resetIdentifier').value = '';
-    document.querySelectorAll('.auth-tab-btn').forEach(b => b.classList.remove('active'));
-}
 
-function handlePasswordReset() {
-    const identifier = document.getElementById('resetIdentifier').value.trim();
-    const errorEl = document.getElementById('resetError');
-    const messageEl = document.getElementById('resetMessage');
-    
-    if (!identifier) {
-        errorEl.textContent = 'Please enter your email or username';
-        messageEl.textContent = '';
-        return;
-    }
+        function showForgotPasswordTab() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('forgotPasswordScreen').style.display = 'block';
+            document.getElementById('resetError').textContent = '';
+            document.getElementById('resetMessage').textContent = '';
+            document.getElementById('resetIdentifier').value = '';
+            document.querySelectorAll('.auth-tab-btn').forEach(b => b.classList.remove('active'));
+        }
 
-    // Find user by email or username
-    const user = Object.values(app.auth.users).find(u => 
-        u.email === identifier || u.username === identifier
-    );
+        function handlePasswordReset() {
+            const identifier = document.getElementById('resetIdentifier').value.trim();
+            const errorEl = document.getElementById('resetError');
+            const messageEl = document.getElementById('resetMessage');
 
-    if (!user) {
-        errorEl.textContent = 'No account found with that email or username';
-        messageEl.textContent = '';
-        return;
-    }
+            if (!identifier) {
+                errorEl.textContent = 'Please enter your email or username';
+                messageEl.textContent = '';
+                return;
+            }
 
-    // Generate a temporary password
-    const tempPassword = Math.random().toString(36).substring(2, 10).toUpperCase();
-    
-    // Store the temporary password (in a real app, you'd send this via email)
-    const resetTokens = JSON.parse(localStorage.getItem('resetTokens')) || {};
-    resetTokens[identifier] = {
-        tempPassword: tempPassword,
-        createdAt: new Date().toISOString(),
-        username: user.username
-    };
-    localStorage.setItem('resetTokens', JSON.stringify(resetTokens));
-
-    errorEl.textContent = '';
-    messageEl.textContent = `✓ Temporary password sent! Your temp password is: ${tempPassword}\n\nUse this to login, then change your password.`;
-    
-    setTimeout(() => {
-        document.getElementById('loginUsername').value = user.username;
-        document.getElementById('loginPassword').value = tempPassword;
-        showLoginTab();
-    }, 3000);
-}
+            // Firebase password reset
+            auth.sendPasswordResetEmail(identifier).then(() => {
+                errorEl.textContent = '';
+                messageEl.textContent = '✓ Password reset email sent! Check your inbox.';
+                setTimeout(() => {
+                    showLoginTab();
+                }, 3000);
+            }).catch(error => {
+                errorEl.textContent = 'Error: ' + error.message;
+                messageEl.textContent = '';
+            });
+        }
     </script>
 </body>
 </html>
