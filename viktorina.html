@@ -80,7 +80,41 @@
                             <i class="fas fa-sign-in-alt"></i> Sign In
                         </button>
                     </form>
-
+                    <!-- FORGOT PASSWORD SCREEN -->
+                    <div class="screen" id="forgotPasswordScreen" style="display: none;">
+                        <div class="auth-container">
+                            <div class="auth-card">
+                                <div class="auth-logo">
+                                    <i class="fas fa-key"></i>
+                                </div>
+                                <h2>Reset Password</h2>
+                                <p>Enter your email or username to reset your password</p>
+                    
+                                <form id="forgotPasswordForm" class="auth-form">
+                                    <div class="form-group">
+                                        <label>Email or Username</label>
+                                        <input type="text" id="resetIdentifier" placeholder="Enter your email or username" required>
+                                    </div>
+                                    <button type="button" class="btn btn-primary btn-lg" onclick="handlePasswordReset()">
+                                        <i class="fas fa-envelope"></i> Send Reset Link
+                                    </button>
+                                                            <p style="text-align: center; margin-top: 1rem; font-size: 0.9rem;">
+                                                                <a onclick="showForgotPasswordTab()" style="cursor: pointer; color: #6366F1; text-decoration: none;">
+                                                                    <i class="fas fa-key"></i> Forgot your password?
+                                                                </a>
+                                                            </p>
+                                </form>
+                                <div id="resetMessage" style="text-align: center; margin-top: 1rem; color: #10B981;"></div>
+                                <div class="auth-error" id="resetError"></div>
+                    
+                                <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem;">
+                                    <a onclick="showLoginTab()" style="cursor: pointer; color: #6366F1; text-decoration: none;">
+                                        <i class="fas fa-arrow-left"></i> Back to Login
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                     <!-- Register Form -->
                     <form id="registerForm" class="auth-form" style="display: none;">
                         <div class="form-group">
@@ -91,6 +125,12 @@
                             <label>Email</label>
                             <input type="email" id="registerEmail" placeholder="Enter your email" required>
                         </div>
+                        <!-- Sign In button removed -->
+                        <p style="text-align: center; margin-top: 1rem; font-size: 0.9rem;">
+                            <a onclick="showForgotPasswordTab()" style="cursor: pointer; color: #6366F1; text-decoration: none;">
+                                <i class="fas fa-key"></i> Forgot your password?
+                            </a>
+                        </p>
                         <div class="form-group">
                             <label>Username</label>
                             <input type="text" id="registerUsername" placeholder="Choose a username" required>
@@ -907,7 +947,26 @@
                         `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
                 }, 1000);
             }
+            validateCode() {
+                const code = document.getElementById('quizCode').value.trim().toUpperCase();
+                const errorEl = document.getElementById('codeError');
+                
+                if (!code || code.length !== 6) {
+                    errorEl.textContent = 'Please enter a valid 6-digit code';
+                    errorEl.classList.add('show');
+                    return;
+                }
 
+                const quizId = Object.keys(this.quizzes).find(id => this.quizzes[id].quizCode === code);
+                
+                if (quizId) {
+                    errorEl.classList.remove('show');
+                    this.startQuiz(quizId);
+                } else {
+                    errorEl.textContent = 'Invalid quiz code. Please check and try again.';
+                    errorEl.classList.add('show');
+                }
+            }
             loadLeaderboard() {
                 const tbody = document.getElementById('leaderboardBody');
                 
@@ -1057,6 +1116,59 @@
         function retakeQuiz() { app.retakeQuiz(); }
         function shareResults() { app.shareResults(); }
         function validateCode() { app.validateCode(); }
+function showForgotPasswordTab() {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('forgotPasswordScreen').style.display = 'block';
+    document.getElementById('resetError').textContent = '';
+    document.getElementById('resetMessage').textContent = '';
+    document.getElementById('resetIdentifier').value = '';
+    document.querySelectorAll('.auth-tab-btn').forEach(b => b.classList.remove('active'));
+}
+
+function handlePasswordReset() {
+    const identifier = document.getElementById('resetIdentifier').value.trim();
+    const errorEl = document.getElementById('resetError');
+    const messageEl = document.getElementById('resetMessage');
+    
+    if (!identifier) {
+        errorEl.textContent = 'Please enter your email or username';
+        messageEl.textContent = '';
+        return;
+    }
+
+    // Find user by email or username
+    const user = Object.values(app.auth.users).find(u => 
+        u.email === identifier || u.username === identifier
+    );
+
+    if (!user) {
+        errorEl.textContent = 'No account found with that email or username';
+        messageEl.textContent = '';
+        return;
+    }
+
+    // Generate a temporary password
+    const tempPassword = Math.random().toString(36).substring(2, 10).toUpperCase();
+    
+    // Store the temporary password (in a real app, you'd send this via email)
+    const resetTokens = JSON.parse(localStorage.getItem('resetTokens')) || {};
+    resetTokens[identifier] = {
+        tempPassword: tempPassword,
+        createdAt: new Date().toISOString(),
+        username: user.username
+    };
+    localStorage.setItem('resetTokens', JSON.stringify(resetTokens));
+
+    errorEl.textContent = '';
+    messageEl.textContent = `✓ Temporary password sent! Your temp password is: ${tempPassword}\n\nUse this to login, then change your password.`;
+    
+    setTimeout(() => {
+        document.getElementById('loginUsername').value = user.username;
+        document.getElementById('loginPassword').value = tempPassword;
+        showLoginTab();
+    }, 3000);
+}
     </script>
 </body>
 </html>
